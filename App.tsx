@@ -11,7 +11,6 @@ import {useEffect, useState, useContext} from 'react';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import TabNavigator from './screens/TabNavigator';
 import {app} from './config';
-import {initializeApp} from 'firebase/app';
 import {
   getAuth,
   onAuthStateChanged,
