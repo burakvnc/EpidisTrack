@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '75%',
+    height:'15%',
     resizeMode: 'contain',
   },
   inputContainer: {
