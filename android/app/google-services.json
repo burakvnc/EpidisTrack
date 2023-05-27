@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "491490215048",
+    "firebase_url": "https://epidis-d09dc-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "epidis-d09dc",
+    "storage_bucket": "epidis-d09dc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:491490215048:android:c9b282717a7f633fa90b3d",
+        "android_client_info": {
+          "package_name": "com.burakvnc.epidis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "491490215048-u1lm1lb4aen44fspo6t95ghiag4vita2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYK6Dd8vzh68fLsUiSzr1UKJozcrrUM5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "491490215048-fmrser4097ksuvnfum2vqa1lerlunoas.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
