@@ -11,7 +11,7 @@ import {
   LayoutChangeEvent,
 } from 'react-native';
 // navigation
-import {NavigationContainer} from '@react-navigation/native';
+
 import {
   BottomTabBarProps,
   BottomTabNavigationOptions,
@@ -45,83 +45,81 @@ const TabNavigator = () => {
   return (
     <>
       <StatusBar barStyle="light-content" />
-      <NavigationContainer>
-        <Tab.Navigator
-          tabBar={props => <AnimatedTabBar {...props} />}
-          screenOptions={{
-            headerTintColor: '#eee',
-            headerTitleStyle: {
-              fontFamily: 'CaviarDreams',
-            },
-            headerStyle: {
-              backgroundColor: '#0a2f35',
-              shadowColor: 'transparent',
-              elevation: 0,
-            },
-          }}>
-          <Tab.Screen
-            name="Hastalık Haritası"
-            options={{
-              headerShown:false,
-              // @ts-ignore
-              tabBarIcon: ({ref}) => (
-                <Lottie
-                  ref={ref}
-                  loop={false}
-                  source={require('../Props/lottie/map.icon.json')}
-                  style={styles.icon}
-                />
-              ),
-            }}
-            component={HaritaStack}
-          />
-          <Tab.Screen
-            name="Hastalık Geçmişi"
-            options={{
-              // @ts-ignore
-              tabBarIcon: ({ref}) => (
-                <Lottie
-                  ref={ref}
-                  loop={false}
-                  source={require('../Props/lottie/history2.icon.json')}
-                  style={styles.icon}
-                />
-              ),
-            }}
-            component={Gecmis}
-          />
-          <Tab.Screen
-            name="Profil"
-            options={{
-              // @ts-ignore
-              tabBarIcon: ({ref}) => (
-                <Lottie
-                  ref={ref}
-                  loop={false}
-                  source={require('../Props/lottie/profile3.icon.json')}
-                  style={styles.icon}
-                />
-              ),
-            }}
-            component={Profil}
-          />
-          <Tab.Screen
-            name="Ayarlar"
-            options={{
-              // @ts-ignore
-              tabBarIcon: ({ref}) => (
-                <Lottie
-                  ref={ref}
-                  loop={false}
-                  source={require('../Props/lottie/settings4.icon.json')}
-                  style={styles.icon}
-                />
-              ),
-            }}
-            component={Ayarlar}
-          />
-        </Tab.Navigator>
-      </NavigationContainer>
+      <Tab.Navigator
+        tabBar={props => <AnimatedTabBar {...props} />}
+        screenOptions={{
+          headerTintColor: '#eee',
+          headerTitleStyle: {
+            fontFamily: 'CaviarDreams',
+          },
+          headerStyle: {
+            backgroundColor: '#0a2f35',
+            shadowColor: 'transparent',
+            elevation: 0,
+          },
+        }}>
+        <Tab.Screen
+          name="Hastalık Haritası"
+          options={{
+            headerShown: false,
+            // @ts-ignore
+            tabBarIcon: ({ref}) => (
+              <Lottie
+                ref={ref}
+                loop={false}
+                source={require('../Props/lottie/map.icon.json')}
+                style={styles.icon}
+              />
+            ),
+          }}
+          component={HaritaStack}
+        />
+        <Tab.Screen
+          name="Hastalık Geçmişi"
+          options={{
+            // @ts-ignore
+            tabBarIcon: ({ref}) => (
+              <Lottie
+                ref={ref}
+                loop={false}
+                source={require('../Props/lottie/history2.icon.json')}
+                style={styles.icon}
+              />
+            ),
+          }}
+          component={Gecmis}
+        />
+        <Tab.Screen
+          name="Profil"
+          options={{
+            // @ts-ignore
+            tabBarIcon: ({ref}) => (
+              <Lottie
+                ref={ref}
+                loop={false}
+                source={require('../Props/lottie/profile3.icon.json')}
+                style={styles.icon}
+              />
+            ),
+          }}
+          component={Profil}
+        />
+        <Tab.Screen
+          name="Ayarlar"
+          options={{
+            // @ts-ignore
+            tabBarIcon: ({ref}) => (
+              <Lottie
+                ref={ref}
+                loop={false}
+                source={require('../Props/lottie/settings4.icon.json')}
+                style={styles.icon}
+              />
+            ),
+          }}
+          component={Ayarlar}
+        />
+      </Tab.Navigator>
     </>
   );
 };

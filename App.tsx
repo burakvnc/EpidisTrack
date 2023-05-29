@@ -18,6 +18,8 @@ import {
   browserLocalPersistence,
 } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {SignInContextProvider} from './authContext';
+import RootNavigator from './screens/rootNavigation';
 
 LogBox.ignoreLogs(['Warning: ...']);
 LogBox.ignoreAllLogs();
@@ -62,8 +64,8 @@ export default function App() {
     if (initializing) {
       checkUserPersistence();
     }
-  }, [initializing]);
-
+  }, []);
+  console.log(user);
   useEffect(() => {
     async function persistUser() {
       try {
@@ -75,11 +77,6 @@ export default function App() {
 
     persistUser();
   }, [user]);
-
-  useEffect(() => {
-    // Clear user state on app reload
-    setUser(null);
-  }, []);
 
   if (splashScreenVisible) {
     return (
@@ -96,19 +93,15 @@ export default function App() {
         </View>
       </View>
     );
-  } else if (initializing) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
-    );
   } else {
     return (
       <>
-        <GestureHandlerRootView style={{flex: 1}}>
-          <StatusBar hidden={true} />
-          {user ? <TabNavigator /> : <StackNavigator navigation={undefined} />}
-        </GestureHandlerRootView>
+        <SignInContextProvider>
+          <GestureHandlerRootView style={{flex: 1}}>
+            <StatusBar hidden={true} />
+            <RootNavigator />
+          </GestureHandlerRootView>
+        </SignInContextProvider>
       </>
     );
   }

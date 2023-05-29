@@ -19,13 +19,16 @@ import {
   View,
   KeyboardAvoidingView,
 } from 'react-native';
-import {useState} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import {useState, useContext} from 'react';
 import {getAuth, signInWithEmailAndPassword} from 'firebase/auth';
 import config from '../../../config';
 import GoogleSign from './GoogleSign';
+import {SignInContext} from '../../../authContext';
 export default function LoginScreen({navigation}) {
   const [shadowOpacity, setShadowOpacity] = useState(new Animated.Value(0));
-
+  const {dispatchSignedIn} = useContext(SignInContext);
   useEffect(() => {
     const shadowOpacityAnimation = Animated.timing(shadowOpacity, {
       toValue: 500,
@@ -62,6 +65,21 @@ export default function LoginScreen({navigation}) {
     signInWithEmailAndPassword(auth, email, password)
       .then(userCredential => {
         const user = userCredential.user;
+        if (user) {
+          dispatchSignedIn({
+            type: 'UPDATE_SIGN_IN',
+            payload: {userToken: 'signed-in'},
+          });
+
+          // Store the user token in AsyncStorage
+          AsyncStorage.setItem('userToken', 'signed-in')
+            .then(() => {
+              console.log('User token stored successfully.');
+            })
+            .catch(error => {
+              console.log('Error storing user token:', error);
+            });
+        }
         console.log('Logged in with:', user.email);
       })
       .catch(error => {
@@ -145,7 +163,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '75%',
-    height:'15%',
+    height: '15%',
     resizeMode: 'contain',
   },
   inputContainer: {

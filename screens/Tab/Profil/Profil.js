@@ -27,8 +27,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import {app} from '../../../config';
+import {SignInContext} from '../../../authContext';
 export default function Profil({navigation}) {
   const db = getFirestore();
+  const {dispatchSignedIn} = useContext(SignInContext);
   const auth = getAuth(app);
   const [userData, setUserData] = useState([]);
   const [pickerResponse, setPickerResponse] = useState(null);
@@ -40,9 +42,8 @@ export default function Profil({navigation}) {
   const [password, setPassword] = useState('');
   const [kangrubu, setKangrubu] = useState('');
   const [cinsiyet, setcinsiyet] = useState('');
-  async function getIntroductions() {
+  async function getIntroductions(uid) {
     try {
-      const uid = auth.currentUser.uid;
       const userRef = doc(db, 'users', uid);
       const docSnapshot = await getDoc(userRef);
 
@@ -64,33 +65,69 @@ export default function Profil({navigation}) {
       console.log('Error getting user document:', error);
     }
   }
+
   useEffect(() => {
     const fetchData = async () => {
       const auth = getAuth(app);
       const currentUser = auth.currentUser;
+      let uid = null;
+
       if (currentUser) {
-        const uid = currentUser.uid;
+        uid = currentUser.uid;
         console.log(`The current user's UID is ${uid}`);
       } else {
         console.log('There is no currently signed in user');
       }
-      const uid = currentUser.uid;
+
       if (uid) {
-        await getIntroductions(uid);
+        await getIntroductions(uid); // Call getIntroductions with the UID value
+      } else {
+        console.log('UID is null or empty');
       }
     };
 
     fetchData();
   }, []);
 
+  const [uid, setUid] = useState('');
+
+  useEffect(() => {
+    const getUserFromStorage = async () => {
+      try {
+        const user = await AsyncStorage.getItem('user');
+        if (user !== null) {
+          const parsedUser = JSON.parse(user);
+          const uidValue = parsedUser.uid;
+          console.log('UID from AsyncStorage:', uidValue);
+          setUid(uidValue);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getUserFromStorage();
+  }, []);
+
+  // Call getIntroductions with the UID value from AsyncStorage
+  useEffect(() => {
+    if (uid) {
+      getIntroductions(uid);
+    }
+  }, [uid]);
+
   const handleSignOut = () => {
-    const auth = getAuth(app);
-    signOut(auth)
+    dispatchSignedIn({
+      type: 'UPDATE_SIGN_IN',
+      payload: {userToken: 'signed-out'},
+    });
+
+    AsyncStorage.setItem('userToken', 'signed-out')
       .then(() => {
-        // Sign-out successful.
+        console.log('Logged out successfully');
       })
       .catch(error => {
-        // An error happened.
+        console.error('Error setting user token to signed-out:', error);
       });
   };
 
@@ -150,7 +187,7 @@ export default function Profil({navigation}) {
           <TouchableOpacity
             style={{
               height: 50,
-              marginTop:15,
+              marginTop: 15,
               backgroundColor: '#a44a3f',
               justifyContent: 'center',
               borderRadius: 15,

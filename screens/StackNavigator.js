@@ -10,7 +10,6 @@ const Stack = createNativeStackNavigator();
 
 export default function StackNavigator({navigation}) {
   return (
-    <NavigationContainer>
     <Stack.Navigator
       screenOptions={{
         headerMode: 'screen',
@@ -42,6 +41,5 @@ export default function StackNavigator({navigation}) {
         component={CreateProfile}
       />
     </Stack.Navigator>
-    </NavigationContainer>
   );
 }

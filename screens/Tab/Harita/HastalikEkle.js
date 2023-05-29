@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react-native/no-inline-styles */
 import React, {useState, useEffect} from 'react';
-import {View, StyleSheet, Text} from 'react-native';
+import {View, StyleSheet, Text, Alert} from 'react-native';
 import FAB2 from './FAB2';
 import {TextInput, TouchableOpacity} from 'react-native-gesture-handler';
 import {
@@ -12,8 +12,12 @@ import {
   collection,
   addDoc,
   doc,
+  updateDoc,
   GeoPoint,
+  getDocs,
   getDoc,
+  where,
+  query,
 } from 'firebase/firestore';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -52,6 +56,7 @@ export default function HastalikEkle({navigation}) {
   const db = getFirestore();
   const auth = getAuth(app);
   const [userData, setUserData] = useState([]);
+  const [data, setData] = useState([]);
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
@@ -109,11 +114,29 @@ export default function HastalikEkle({navigation}) {
         !!siddet,
     );
   };
-
   useEffect(() => {
     handleInputsValidation();
   }, [hastalikTanimi, doktoragitme, yakinindavarmi, siddet, hastalik]);
+  async function getIntroductions2(uid) {
+    try {
+      setUserUid(uid);
+      const q = query(collection(db, 'locations'), where('useruid', '==', uid));
+      const querySnapshot = await getDocs(q);
 
+      if (!querySnapshot.empty) {
+        const userDataArray = [];
+        querySnapshot.forEach(docSnapshot => {
+          const userData = docSnapshot.data();
+          userDataArray.push(userData);
+        });
+        setData(userDataArray);
+      } else {
+        console.log('User document does not exist.');
+      }
+    } catch (error) {
+      console.log('Error getting user document:', error);
+    }
+  }
   useEffect(() => {
     let ageCategory = '';
 
@@ -128,16 +151,14 @@ export default function HastalikEkle({navigation}) {
     // ageCategory state'ini güncelle
     setAgeCategory(ageCategory);
   }, [age]);
-  async function getIntroductions() {
+  async function getIntroductions(uid) {
     try {
-      const uid = auth.currentUser.uid;
       setUserUid(uid);
       const userRef = doc(db, 'users', uid);
       const docSnapshot = await getDoc(userRef);
 
       if (docSnapshot.exists()) {
         const userData = docSnapshot.data();
-        console.log('Retrieved user data:', userData);
         setUserData(userData);
         setPhone(userData.phone);
         setAge(userData.age);
@@ -153,28 +174,35 @@ export default function HastalikEkle({navigation}) {
     }
   }
 
+  const [uid, setUid] = useState('');
+
   useEffect(() => {
-    const fetchData = async () => {
-      const auth = getAuth(app);
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const uid = currentUser.uid;
-        console.log(`The current user's UID is ${uid}`);
-      } else {
-        console.log('There is no currently signed in user');
-      }
-      const uid = currentUser.uid;
-      if (uid) {
-        await getIntroductions(uid);
+    const getUserFromStorage = async () => {
+      try {
+        const user = await AsyncStorage.getItem('user');
+        if (user !== null) {
+          const parsedUser = JSON.parse(user);
+          const uidValue = parsedUser.uid;
+          setUid(uidValue);
+        }
+      } catch (error) {
+        console.log(error);
       }
     };
 
-    fetchData();
+    getUserFromStorage();
   }, []);
+
+  // Call getIntroductions with the UID value from AsyncStorage
+  useEffect(() => {
+    if (uid) {
+      getIntroductions(uid);
+      getIntroductions2(uid);
+    }
+  }, [uid]);
 
   const currentDate = new Date();
   const formattedDate = currentDate.toISOString().split('T')[0];
-  console.log(formattedDate);
   const firestore = getFirestore();
   async function handlesubmitHastalik(
     name,
@@ -194,8 +222,21 @@ export default function HastalikEkle({navigation}) {
     try {
       const userSubcollectionRef = collection(firestore, 'locations');
 
+      // Get the length of the subcollection
+      const subcollectionLength = data.size;
+
+      if (data.length >= 5) {
+        Alert.alert(
+          'Hastalık Ekleyemezsiniz',
+          'Zaten 5 Tane Hastalık Eklemişsiniz.',
+          [{text: 'Tamam', onPress: () => console.log('OK Pressed')}],
+        );
+
+        return; // Exit the function without adding data
+      }
+
       // Store additional user information in the subcollection
-      await addDoc(userSubcollectionRef, {
+      const newDocRef = await addDoc(userSubcollectionRef, {
         name,
         age,
         kan: kangrubu,
@@ -210,6 +251,13 @@ export default function HastalikEkle({navigation}) {
         location,
         hastalik: selectedValue,
       });
+  
+      // Get the ID of the newly created document
+      const docId = newDocRef.id;
+  
+      // Update the document with the ID
+      await updateDoc(newDocRef, { documentId: docId });
+
       alert('Hastalık Eklendi');
       navigation.navigate('Harita');
     } catch (error) {

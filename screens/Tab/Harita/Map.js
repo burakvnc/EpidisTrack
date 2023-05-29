@@ -143,6 +143,24 @@ const CustomClusteredMarker = ({
 };
 
 export default function Map() {
+  const mapStyle = [
+    {
+      featureType: 'water',
+      elementType: 'geometry',
+      stylers: [{color: '#0a2f35'}],
+    },
+    {
+      featureType: 'water',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#515c6d'}],
+    },
+    {
+      featureType: 'water',
+      elementType: 'labels.text.stroke',
+      stylers: [{color: '#515cdd'}],
+    },
+  ];
+
   const firebaseConfig = {
     apiKey: 'AIzaSyB6P5S-QDen3AckfsJ_iEDYG7hsHJe4p58',
     authDomain: 'epidis-d09dc.firebaseapp.com',
@@ -417,7 +435,6 @@ export default function Map() {
       } catch (error) {
         console.error('Error fetching markers:', error);
       }
-      setTimeout(fetchMarkers, 30000);
     };
     fetchMarkers();
   }, [selectedAge, selectedBlood, selectedGender, selectedIll]);
@@ -686,11 +703,12 @@ export default function Map() {
         {lat2 !== 1 && lng2 !== 2 && (
           <MapView
             provider={PROVIDER_GOOGLE}
-            userInterfaceStyle="light"
+            userInterfaceStyle={'dark'}
             toolbarEnabled={false}
             minZoomLevel={2}
             maxZoomLevel={12}
             style={styles.map}
+            customMapStyle={mapStyle}
             key={mapKey}
             initialRegion={{
               latitude: lat2,

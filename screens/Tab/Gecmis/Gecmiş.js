@@ -7,6 +7,7 @@ import {
   View,
   Text,
   ScrollView,
+  Alert,
   TouchableOpacity,
   FlatList,
   RefreshControl,
@@ -14,6 +15,8 @@ import {
 import {
   getFirestore,
   where,
+  deleteDoc,
+  doc,
   query,
   getDocs,
   collection,
@@ -26,10 +29,11 @@ import {useFocusEffect} from '@react-navigation/native';
 export default function Gecmis() {
   const db = getFirestore(app);
   const auth = getAuth(app);
+  const [uid, setUid] = useState('');
+
   const [data, setData] = useState(null);
-  async function getIntroductions() {
+  async function getIntroductions(uid) {
     try {
-      const uid = auth.currentUser.uid;
       const q = query(collection(db, 'locations'), where('useruid', '==', uid));
       const querySnapshot = await getDocs(q);
 
@@ -42,6 +46,7 @@ export default function Gecmis() {
         setData(userDataArray);
       } else {
         console.log('User document does not exist.');
+        setData(null);
       }
     } catch (error) {
       console.log('Error getting user document:', error);
@@ -49,44 +54,42 @@ export default function Gecmis() {
   }
 
   useEffect(() => {
-    getIntroductions();
-  }, []);
-
-  console.log(data);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const auth = getAuth(app);
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const uid = currentUser.uid;
-        console.log(`The current user's UID is ${uid}`);
-      } else {
-        console.log('There is no currently signed in user');
-      }
-      const uid = currentUser.uid;
-      if (uid) {
-        await getIntroductions(uid);
+    const getUserFromStorage = async () => {
+      try {
+        const user = await AsyncStorage.getItem('user');
+        if (user !== null) {
+          const parsedUser = JSON.parse(user);
+          const uidValue = parsedUser.uid;
+          console.log('UID from AsyncStorage:', uidValue);
+          setUid(uidValue);
+        }
+      } catch (error) {
+        console.log(error);
       }
     };
 
-    fetchData();
+    getUserFromStorage();
   }, []);
+
+  // Call getIntroductions with the UID value from AsyncStorage
+  useEffect(() => {
+    if (uid) {
+      getIntroductions(uid);
+    }
+  }, [uid]);
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const onRefresh = () => {
     setIsRefreshing(true);
-    getIntroductions()
+    getIntroductions(uid)
       .then(() => setIsRefreshing(false))
       .catch(error => {
         console.log('Error refreshing data:', error);
         setIsRefreshing(false);
       });
   };
-  useFocusEffect(
-    React.useCallback(() => {
-      getIntroductions();
-    }, []),
-  );
+
+
   const renderUserData = ({item}) => {
     function getSiddetColor() {
       // Define your logic to map the siddet value to a background color
@@ -118,6 +121,25 @@ export default function Gecmis() {
       // If no match is found, return a default color
       return '#000000';
     }
+
+    const handleDelete = async () => {
+      try {
+        const documentId = item.documentId; // Assuming you have a field named 'documentId' in your item object
+        const documentRef = doc(collection(db, 'locations'), documentId);
+        await deleteDoc(documentRef);
+
+        // Show alert
+        Alert.alert('Hastalık Silindi', 'Hastalık Başarıyla Silindi', [
+          {text: 'Tamam', onPress: () => console.log('OK Pressed')},
+        ]);
+
+        // Refresh data with onRefresh
+        onRefresh();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     return (
       <View
         style={{
@@ -441,6 +463,7 @@ export default function Gecmis() {
             borderRadius: 10,
           }}>
           <TouchableOpacity
+            onPress={handleDelete}
             style={{
               height: 50,
               backgroundColor: '#a44a3f',
@@ -470,17 +493,20 @@ export default function Gecmis() {
         flex: 1,
         alignItems: 'center',
       }}>
-      {data ? (
+      {data && data.length > 0 ? (
         <FlatList
           data={data}
           renderItem={renderUserData}
+          showsVerticalScrollIndicator={false}
           keyExtractor={(item, index) => index.toString()}
           refreshControl={
             <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
           }
         />
       ) : (
-        <Text style={{marginTop: 15}}>Hiç Hastalık Eklememişsiniz...</Text>
+        <Text style={{marginTop: 15, color: '#eee'}}>
+          {data ? 'Yükleniyor' : 'Hiç Hastalık Eklememişsiniz...'}
+        </Text>
       )}
     </View>
   );
