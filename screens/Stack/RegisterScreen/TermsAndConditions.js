@@ -15,12 +15,7 @@ const TermsAndConditions = () => {
   return (
     <View>
       <View style={{flexDirection: 'row'}}>
-        <CheckBox
-          color={'#d90'}
-          value={checked}
-          onValueChange={handleCheckboxChange}
-          tintColors={{ true: '#e56647', false: '#eee' }}
-        />
+
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Text
             style={{

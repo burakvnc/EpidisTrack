@@ -20,7 +20,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import Snackbar from 'react-native-snackbar';
 import {useState, useContext} from 'react';
 import {getAuth, signInWithEmailAndPassword} from 'firebase/auth';
 import config from '../../../config';
@@ -85,7 +85,10 @@ export default function LoginScreen({navigation}) {
       .catch(error => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        alert(errorMessage);
+        Snackbar.show({
+          text: 'Lütfen geçerli bilgiler ile giriş yapın',
+          duration: Snackbar.LENGTH_LONG,
+        });
       });
   };
 
@@ -119,7 +122,6 @@ export default function LoginScreen({navigation}) {
         <TouchableOpacity onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Giriş Yap</Text>
         </TouchableOpacity>
-        <GoogleSign />
         <TouchableOpacity
           onPress={() => navigation.navigate('RegisterScreen')}
           style={{marginTop: 20}}>
@@ -174,13 +176,13 @@ const styles = StyleSheet.create({
     height: '30%',
   },
   input: {
-    backgroundColor: '#EAE7FF',
-    color: '#181818',
+    backgroundColor: '#0a2f35',
+    color: '#eee',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#181818',
+    borderColor: '#eee',
     width: '85%',
     justifyContent: 'center',
     alignContent: 'center',

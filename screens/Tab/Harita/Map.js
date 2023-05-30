@@ -186,9 +186,9 @@ export default function Map() {
   const [open2, setOpen2] = useState(false);
   const [value2, setValue2] = useState(['']);
   const [items2, setItems2] = useState([
-    {label: 'Genç', value: 'genc'},
-    {label: 'Orta Yaşlı', value: 'orta yasli'},
-    {label: 'Yaşlı', value: 'yasli'},
+    {label: 'Genç(1-29)', value: 'genc'},
+    {label: 'Orta Yaşlı(30-49)', value: 'orta yasli'},
+    {label: 'Yaşlı(50+)', value: 'yasli'},
   ]);
   const [open3, setOpen3] = useState(false);
   const [value3, setValue3] = useState(['']);

@@ -24,16 +24,10 @@ const MailSend = () => {
           alignSelf: 'flex-start',
           alignContent: 'flex-start',
         }}>
-        <CheckBox
-          color={'#d90'}
-          value={checked}
-          onValueChange={handleCheckboxChange}
-          tintColors={{ true: '#e56647', false: '#eee' }}
-        />
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <Text
             style={{
-              marginTop:8,
+              marginTop: 8,
               marginLeft: 10,
               color: '#d90',
               textDecorationLine: 'underline',
@@ -42,9 +36,15 @@ const MailSend = () => {
             Mail ve Bildirim
           </Text>
         </TouchableOpacity>
-        <Text style={{fontFamily: 'CaviarDreams',color:'#fff',marginTop:8}}> formunu onaylıyorum.</Text>
+        <Text style={{fontFamily: 'CaviarDreams', color: '#fff', marginTop: 8}}>
+          {' '}
+          formunu onaylıyorum.
+        </Text>
       </View>
-      <Modal visible={modalVisible} animationType="slide" statusBarTranslucent={true}>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        statusBarTranslucent={true}>
         <View
           style={{
             flex: 1,

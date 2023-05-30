@@ -42,7 +42,7 @@ export default function GoogleSign() {
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
       setuserInfo(userInfo);
-      console.log('sa');
+      console.log(userInfo2);
     } catch (error) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         console.log(error);
@@ -55,7 +55,6 @@ export default function GoogleSign() {
       }
     }
   };
-
   return (
     <>
       <View style={styles.body}>

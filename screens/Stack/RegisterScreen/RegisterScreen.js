@@ -11,20 +11,29 @@ import {
   TextInput,
   StyleSheet,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
 import {SafeAreaView} from 'react-native';
-import {getAuth, createUserWithEmailAndPassword} from 'firebase/auth';
-import {doc, setDoc} from 'firebase/firestore';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from 'firebase/auth';
+import {doc, setDoc, getDoc} from 'firebase/firestore';
 import {getFirestore} from 'firebase/firestore';
 import TermsAndConditions from './TermsAndConditions';
 import MailSend from './MailSend';
-
-export default function RegisterScreen({route,navigation}) {
+import CheckBox from '@react-native-community/checkbox';
+import Snackbar from 'react-native-snackbar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {SignInContext} from '../../../authContext';
+export default function RegisterScreen({route, navigation}) {
+  const {dispatchSignedIn} = useContext(SignInContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullname, setFullname] = useState('');
   const [phone, setPhone] = useState('');
   const auth = getAuth();
+  const db = getFirestore();
   const firestore = getFirestore();
   async function registerUser(email, phone, password, fullName) {
     try {
@@ -62,6 +71,121 @@ export default function RegisterScreen({route,navigation}) {
         alert(errorMessage);
       });
   };
+  const [checked, setChecked] = useState(false);
+  const [checked2, setChecked2] = useState(false);
+
+  const handleCheckboxChange = () => {
+    setChecked(!checked);
+  };
+  const handleCheckboxChange2 = () => {
+    setChecked2(!checked2);
+  };
+  const [bottomText, setBottomText] = useState(null);
+
+  const validateEmail = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Snackbar.show({
+        text: 'Lütfen geçerli bir e-posta adresi girin.',
+        duration: 2000,
+      });
+    }
+  };
+  const handleRegister = async () => {
+    try {
+      const emailRegex =
+        /^[a-zA-Z0-9._%+-]+@(gmail|outlook|hotmail)\.[a-zA-Z]{2,}$/;
+
+      if (email && password && checked && checked2) {
+        try {
+          const {user} = await signInWithEmailAndPassword(
+            auth,
+            email,
+            password,
+          );
+          if (user) {
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (!userDocSnap.exists()) {
+              navigation.navigate('CreateProfile', {
+                email: email,
+                password: password,
+                user: user,
+              });
+            } else {
+              dispatchSignedIn({
+                type: 'UPDATE_SIGN_IN',
+                payload: {userToken: 'signed-in'},
+              });
+
+              // Store the user token in AsyncStorage
+              AsyncStorage.setItem('userToken', 'signed-in')
+                .then(() => {
+                  console.log('User token stored successfully.');
+                })
+                .catch(error => {
+                  console.log('Error storing user token:', error);
+                });
+            }
+          }
+          console.log('Logged in with:', user.email);
+        } catch (loginError) {
+          // If login fails, create a new user account
+          if (loginError.code === 'auth/user-not-found') {
+            const {user} = await createUserWithEmailAndPassword(
+              auth,
+              email,
+              password,
+            );
+            navigation.navigate('CreateProfile', {
+              email: email,
+              password: password,
+              user: user,
+            });
+          } else {
+            throw loginError; // Rethrow other login errors
+          }
+        }
+      } else if (!emailRegex.test(email)) {
+        Snackbar.show({
+          text: 'Lütfen geçerli bir e-posta adresi girin.',
+          duration: 2000,
+        });
+      } else if (!email) {
+        Snackbar.show({
+          text: 'Lütfen e-posta adresinizi girin.',
+          duration: 2000,
+        });
+      } else if (!password) {
+        Snackbar.show({
+          text: 'Lütfen şifrenizi girin.',
+          duration: 2000,
+        });
+      } else if (password.length <= 5) {
+        Snackbar.show({
+          text: 'Lütfen Geçerli bir şifre girin.En az 6 haneden oluşması gerekmektedir.',
+          duration: 2000,
+        });
+      } else {
+        Snackbar.show({
+          text: 'Lütfen formları onaylayın.',
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      const errorMessage = error.message;
+      showSnackbar(errorMessage);
+    }
+  };
+
+  const showSnackbar = message => {
+    Snackbar.show({
+      text: 'Bu Email Adresi Zaten kullanılıyor.',
+      duration: 2000,
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Image
@@ -76,6 +200,7 @@ export default function RegisterScreen({route,navigation}) {
           placeholderTextColor={'#909090'}
           value={email}
           onChangeText={text => setEmail(text)}
+          onBlur={validateEmail}
           style={styles.input}
         />
         <TextInput
@@ -88,22 +213,31 @@ export default function RegisterScreen({route,navigation}) {
         />
       </View>
       <View>
-        <TermsAndConditions />
-        <MailSend />
+        <View style={{flexDirection: 'row'}}>
+          <CheckBox
+            color={'#d90'}
+            value={checked}
+            onValueChange={handleCheckboxChange}
+            tintColors={{true: '#e56647', false: '#eee'}}
+          />
+          <TermsAndConditions />
+        </View>
+        <View style={{flexDirection: 'row'}}>
+          <CheckBox
+            color={'#d90'}
+            value={checked2}
+            onValueChange={handleCheckboxChange2}
+            tintColors={{true: '#e56647', false: '#eee'}}
+          />
+          <MailSend />
+        </View>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          onPress={() =>
-            navigation.navigate('CreateProfile', {
-              email: email,
-              password: password,
-            })
-          }
-          style={styles.button}>
+        <TouchableOpacity onPress={handleRegister} style={styles.button}>
           <Text style={styles.buttonText}>Kayıt Ol</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={() => navigation.navigate('RegisterScreen')}
+          onPress={() => navigation.navigate('LoginScreen')}
           style={{marginTop: 20}}>
           <View style={{flexDirection: 'row'}}>
             <Text style={styles.buttonOutlineText}>
@@ -147,6 +281,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '75%',
+    height: '15%',
     resizeMode: 'contain',
   },
   inputContainer: {
@@ -157,13 +292,13 @@ const styles = StyleSheet.create({
     height: '30%',
   },
   input: {
-    backgroundColor: '#EAE7FF',
-    color: '#181818',
+    backgroundColor: '#0a2f35',
+    color: '#eee',
     paddingHorizontal: 15,
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#181818',
+    borderColor: '#eee',
     width: '85%',
     justifyContent: 'center',
     alignContent: 'center',

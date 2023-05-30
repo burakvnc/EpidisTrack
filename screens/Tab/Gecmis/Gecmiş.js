@@ -24,7 +24,7 @@ import {
 import app from '../../../config';
 import {getAuth} from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useFocusEffect} from '@react-navigation/native';
+import {useIsFocused} from '@react-navigation/native';
 
 export default function Gecmis() {
   const db = getFirestore(app);
@@ -52,7 +52,21 @@ export default function Gecmis() {
       console.log('Error getting user document:', error);
     }
   }
+  const isFocused = useIsFocused();
 
+  useEffect(() => {
+    // Run getIntroductions when the tab screen is focused
+    if (isFocused) {
+      getIntroductions(uid);
+    }
+  }, [isFocused]);
+
+  // Call getIntroductions with the UID value from AsyncStorage
+  useEffect(() => {
+    if (uid) {
+      getIntroductions(uid);
+    }
+  }, [uid]);
   useEffect(() => {
     const getUserFromStorage = async () => {
       try {
@@ -70,14 +84,6 @@ export default function Gecmis() {
 
     getUserFromStorage();
   }, []);
-
-  // Call getIntroductions with the UID value from AsyncStorage
-  useEffect(() => {
-    if (uid) {
-      getIntroductions(uid);
-    }
-  }, [uid]);
-
   const [isRefreshing, setIsRefreshing] = useState(false);
   const onRefresh = () => {
     setIsRefreshing(true);
@@ -88,7 +94,6 @@ export default function Gecmis() {
         setIsRefreshing(false);
       });
   };
-
 
   const renderUserData = ({item}) => {
     function getSiddetColor() {
@@ -505,7 +510,7 @@ export default function Gecmis() {
         />
       ) : (
         <Text style={{marginTop: 15, color: '#eee'}}>
-          {data ? 'Yükleniyor' : 'Hiç Hastalık Eklememişsiniz...'}
+          Hiç Hastalık Eklememişsiniz...
         </Text>
       )}
     </View>

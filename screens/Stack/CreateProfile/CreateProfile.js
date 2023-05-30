@@ -19,19 +19,23 @@ import {
   View,
   KeyboardAvoidingView,
 } from 'react-native';
-import {useState, useCallback} from 'react';
+import {useState, useCallback, useContext} from 'react';
 import {getAuth, createUserWithEmailAndPassword} from 'firebase/auth';
 import config from '../../../config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {doc, setDoc} from 'firebase/firestore';
 import {getFirestore} from 'firebase/firestore';
 import {ScrollView} from 'react-native-gesture-handler';
+import {SignInContext} from '../../../authContext';
+import Snackbar from 'react-native-snackbar';
 
 export default function CreateProfile({route, navigation}) {
-  const {email, password} = route.params;
-  console.log(email, password);
+  const {email, password, user} = route.params;
+  const {dispatchSignedIn} = useContext(SignInContext);
   const [phone, setPhone] = useState('');
+  const [invalid, setInvalid] = useState(false);
   const [name, setName] = useState('');
-  const [age, setAge] = useState(1);
+  const [age, setAge] = useState(0);
   const [kangrubu, setKangrubu] = useState('');
   const [cinsiyet, setcinsiyet] = useState('');
   const auth = getAuth();
@@ -64,17 +68,18 @@ export default function CreateProfile({route, navigation}) {
   };
   const firestore = getFirestore();
   const handlePhoneChange = text => {
-    // İlk 10 karakteri almak
     const formattedText = text.substring(0, 10);
-    // Sadece 5 ile başlayan ve diğer karakterlerin 0-9 arasında olduğu bir değeri set etmek
     setPhone(formattedText.replace(/[^5\d]/g, ''));
   };
-  // Kullanıcıdan alınan telefon numarasını kontrol etmek
-  if (isValidPhoneNumber(phone)) {
-    console.log('Telefon numarası geçerli.');
-  } else {
-    console.log('Telefon numarası geçerli değil.');
-  }
+  useEffect(() => {
+    if (isValidPhoneNumber(phone)) {
+      console.log('Telefon numarası geçerli.');
+      setInvalid(true);
+    } else {
+      console.log('Telefon numarası geçerli değil.');
+      setInvalid(false);
+    }
+  }, [phone]);
 
   const handleSelection2 = value => {
     setcinsiyet(value);
@@ -94,15 +99,26 @@ export default function CreateProfile({route, navigation}) {
   ) {
     try {
       // Create a new user account in Firebase Authentication
-      const {user} = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
+
+      // Dispatch signed-in action
+      dispatchSignedIn({
+        type: 'UPDATE_SIGN_IN',
+        payload: {userToken: 'signed-in'},
+      });
+
+      // Store the user token in AsyncStorage
+      AsyncStorage.setItem('userToken', 'signed-in')
+        .then(() => {
+          console.log('User token stored successfully.');
+        })
+        .catch(error => {
+          console.log('Error storing user token:', error);
+        });
 
       // Store additional user information in Firestore
       const userRef = doc(firestore, 'users', user.uid);
       await setDoc(userRef, {
+        uid: user.uid,
         email,
         phone,
         name,
@@ -112,12 +128,41 @@ export default function CreateProfile({route, navigation}) {
         age,
       });
 
+      // Store user object in AsyncStorage
+      await AsyncStorage.setItem('user', JSON.stringify(user));
+
       // Return the user object
       return user;
     } catch (error) {
       console.error(error);
     }
   }
+  const handleFormSubmit = () => {
+    if (name && phone && cinsiyet && kangrubu && age) {
+      registerUser(email, phone, password, name, kangrubu, age, cinsiyet);
+    } else if (!name) {
+      showSnackbar('Lütfen İsminizi girin.');
+    } else if (!invalid) {
+      showSnackbar('Lütfen Geçerli bir Telefon numarası girin.');
+    } else if (!phone) {
+      showSnackbar('Lütfen Telefon Numaranızı girin.');
+    } else if (!age || isNaN(age) || age < 1 || age > 99) {
+      showSnackbar('Lütfen Yaşınızı girin.');
+    } else if (!cinsiyet) {
+      showSnackbar('Lütfen Cinsiyetinizi Seçin.');
+    } else if (!kangrubu) {
+      showSnackbar('Lütfen Kan Grubunuzu Seçin.');
+    } else {
+      showSnackbar('Lütfen formları onaylayın.');
+    }
+  };
+
+  const showSnackbar = message => {
+    Snackbar.show({
+      text: message,
+      duration: 2000,
+    });
+  };
   return (
     <SafeAreaView style={styles.container}>
       <Image
@@ -163,7 +208,7 @@ export default function CreateProfile({route, navigation}) {
                     setAge(numericValue);
                   }
                 } else {
-                  setAge('');
+                  setAge(999);
                 }
               }}
               style={styles.input}
@@ -286,11 +331,7 @@ export default function CreateProfile({route, navigation}) {
         </ScrollView>
       </View>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          onPress={() =>
-            registerUser(email, phone, password, name, kangrubu, age, cinsiyet)
-          }
-          style={styles.button}>
+        <TouchableOpacity onPress={handleFormSubmit} style={styles.button}>
           <Text style={styles.buttonText}>Onaylıyorum.</Text>
         </TouchableOpacity>
       </View>
