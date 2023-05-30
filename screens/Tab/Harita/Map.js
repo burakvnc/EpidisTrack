@@ -180,7 +180,7 @@ export default function Map() {
   const [value, setValue] = useState(['']);
   const [items, setItems] = useState([
     {label: 'Erkek', value: 'erkek'},
-    {label: 'Kadın', value: 'kadın'},
+    {label: 'Kadın', value: 'kadin'},
   ]);
 
   const [open2, setOpen2] = useState(false);
@@ -440,7 +440,7 @@ export default function Map() {
   }, [selectedAge, selectedBlood, selectedGender, selectedIll]);
 
   const handleGenderChange = selectedValues => {
-    if (selectedValues.includes('erkek') && selectedValues.includes('kadın')) {
+    if (selectedValues.includes('erkek') && selectedValues.includes('kadin')) {
       setSelectedGender([]);
     } else {
       setSelectedGender(selectedValues);
